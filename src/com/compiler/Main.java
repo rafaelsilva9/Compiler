@@ -10,22 +10,15 @@ public class Main {
             FileReader file = new FileReader("C:/Users/Rafael/Documents/FileToRead.txt");
             BufferedReader bufferedReader = new BufferedReader(file);
             Scanner scanner = new Scanner();
-            String line = bufferedReader.readLine();
 
-            Cursor cursor = new Cursor(line,0);
+            Cursor cursor = new Cursor(bufferedReader);
 
-            while (cursor.getLine() != null){
+            while(!cursor.eof()) {
+                Token token = scanner.process(cursor);
 
-                while (!cursor.eof()){
-                    Token token = scanner.process(line, cursor);
-
-                    if(token != null){
-                        System.out.println(token.getClassification() + " " + token.getLexeme());
-                    }
+                if(token != null){
+                    System.out.println(token.getClassification() + " " + token.getLexeme());
                 }
-
-                line = bufferedReader.readLine();
-                cursor.updateCursor(line, 0);
             }
 
             file.close();
