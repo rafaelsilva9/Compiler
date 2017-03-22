@@ -8,24 +8,26 @@ import java.io.IOException;
  */
 public class Cursor {
     private BufferedReader bufferedReader;
-    private char character;
+    private Character character;
     private int column;
     private int line;
 
-    public Cursor(BufferedReader bufferedReader){
+    public Cursor(BufferedReader bufferedReader) {
         this.bufferedReader = bufferedReader;
         this.column = 0;
         this.line = 1;
+        this.character = new Character(' ');
+        getNext();
     }
 
-    public boolean eof() {
-        boolean eof = true;
+    public boolean hasNext() {
+        boolean eof = false;
         try{
             eof = !bufferedReader.ready();
         } catch (IOException e){
             e.printStackTrace();
         }
-        return eof;
+        return !eof;
     }
 
     public int getColumn() {
@@ -34,7 +36,7 @@ public class Cursor {
 
     public Character getNext() {
         try{
-            if(!eof()){
+            if(hasNext()) {
                 if(character == '\n'){
                     line ++;
                     column = 1;
@@ -48,7 +50,7 @@ public class Cursor {
             e.printStackTrace();
         }
 
-        return null;
+        return ' ';
     }
 
     public char getActualCharacter() {
