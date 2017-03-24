@@ -1,7 +1,5 @@
 package com.compiler;
 
-import javax.print.DocFlavor;
-
 /**
  * created by rafael on 12/03/2017.
  */
@@ -11,6 +9,7 @@ public class Scanner {
         char character = cursor.getActualCharacter();
         StringBuffer token = new StringBuffer(String.valueOf(character));
 
+        //TODO Scanner sempre deve processar o arquivo até retornar um token
         if (Character.isDigit(character)) {
 
             token = processDigit(token, cursor);
@@ -22,7 +21,7 @@ public class Scanner {
                 if (token != null) {
                     return new Token(TokenType.FLOAT, token.toString());
                 } else {
-                    //TODO float malformation
+                    //TODO Float malformation
                 }
             } else {
                 return new Token(TokenType.INT, token.toString());
@@ -32,7 +31,7 @@ public class Scanner {
             if (token != null) {
                 return new Token(TokenType.FLOAT, token.toString());
             } else {
-                //TODO malformation
+                //TODO Float malformation
             }
         } else if (character == '+') {
             cursor.getNext();
@@ -70,6 +69,7 @@ public class Scanner {
             } else {
                 return new Token(TokenType.ASSIGNMENT, token.toString());
             }
+            //TODO Não aceitar '!'
         } else if (character == '!') {
             character = cursor.getNext();
             if (character == '=') {
@@ -77,7 +77,8 @@ public class Scanner {
                 cursor.getNext();
                 return new Token(TokenType.DIFFERENT, token.toString());
             } else {
-                return new Token(TokenType.DENIAL, token.toString());
+//                return new Token(TokenType.DENIAL, token.toString());
+                //TODO Denial malformation
             }
         } else if(character == '(') {
             cursor.getNext();
@@ -97,6 +98,9 @@ public class Scanner {
         } else if(character == ',') {
             cursor.getNext();
             return new Token(TokenType.COMMA, token.toString());
+        } else if(character == ';') {
+            cursor.getNext();
+            return new Token(TokenType.SEMICOLON, token.toString());
         } else if(character == '/') {
             character = cursor.getNext();
             if(character == '/') {
@@ -111,7 +115,7 @@ public class Scanner {
             } else {
                 return new Token(TokenType.DIV, token.toString());
             }
-        } else if(Character.isLowerCase(character)){
+        } else if(Character.isLetter(character) || character == '_') {
             token = processLetters(token, cursor);
             TokenType tokenType = isReservedWord(token.toString());
             if(tokenType == null) {
@@ -125,7 +129,11 @@ public class Scanner {
         }
 
         else {
-            cursor.getNext();
+            if(!cursor.hasNext()) {
+                cursor.setLastCharacterProcessed(true);
+            } else {
+                cursor.getNext();
+            }
         }
 
         return null;
@@ -155,7 +163,7 @@ public class Scanner {
             token.append(character);
             token = processDigit(token, cursor);
         } else {
-            //TODO malformation
+            //TODO Float malformation
             return null;
         }
 
@@ -210,7 +218,7 @@ public class Scanner {
         cursor.getNext();
     }
 
-    private TokenType isReservedWord(String token){
+    private TokenType isReservedWord(String token) {
         switch (token){
             case "main":
                 return TokenType.RESERVED_MAIN;

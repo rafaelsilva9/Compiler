@@ -11,6 +11,7 @@ public class Cursor {
     private Character character;
     private int column;
     private int line;
+    private boolean lastCharacterProcessed;
 
     public Cursor(BufferedReader bufferedReader) {
         this.bufferedReader = bufferedReader;
@@ -36,15 +37,15 @@ public class Cursor {
 
     public Character getNext() {
         try{
-            if(hasNext()) {
-                if(character == '\n'){
+//            if(hasNext()) {
+                if(character == '\n') {
                     line ++;
                     column = 1;
                 } else {
                     column ++;
                 }
                 return character = ((char)bufferedReader.read());
-            }
+//            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -63,5 +64,13 @@ public class Cursor {
 
     public void setLine(int line) {
         this.line = line;
+    }
+
+    public void setLastCharacterProcessed(boolean lastCharacterProcessed) {
+        this.lastCharacterProcessed = lastCharacterProcessed;
+    }
+
+    public boolean isLastCharacterProcessed() {
+        return lastCharacterProcessed;
     }
 }
