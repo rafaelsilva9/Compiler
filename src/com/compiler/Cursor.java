@@ -37,15 +37,15 @@ public class Cursor {
 
     public Character getNext() {
         try{
-//            if(hasNext()) {
                 if(character == '\n') {
                     line ++;
                     column = 1;
+                } else if(character == '\t') {
+                    column += 4;
                 } else {
                     column ++;
                 }
                 return character = ((char)bufferedReader.read());
-//            }
 
         } catch (IOException e) {
             e.printStackTrace();

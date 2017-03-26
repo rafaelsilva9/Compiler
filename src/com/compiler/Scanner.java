@@ -1,5 +1,8 @@
 package com.compiler;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * created by rafael on 12/03/2017.
  */
@@ -107,7 +110,7 @@ public class Scanner {
                 token.append(character);
                 processCommentLine(cursor);
                 return null;
-            } else if(character == '*'){
+            } else if(character == '*') {
                 token.append(character);
                 processCommentBlock(cursor);
                 return null;
@@ -116,19 +119,33 @@ public class Scanner {
                 return new Token(TokenType.DIV, token.toString());
             }
         } else if(Character.isLetter(character) || character == '_') {
-            token = processLetters(token, cursor);
-            TokenType tokenType = isReservedWord(token.toString());
-            if(tokenType == null) {
-                return new Token(TokenType.IDETIFIER, token.toString());
-            } else {
-                return new Token(tokenType, token.toString());
+            Pattern regex = Pattern.compile("[A-Za-z_]");
+            Matcher matcher = regex.matcher(Character.toString(character));
+            if (matcher.find()) {
+                token = processLetters(token, cursor);
+                TokenType tokenType = isReservedWord(token.toString());
+                if(tokenType == null) {
+                    return new Token(TokenType.IDETIFIER, token.toString());
+                } else {
+                    return new Token(tokenType, token.toString());
+                }
             }
         } else if(character == '\'') {
-            processChar(cursor);
-            return null;
-        }
+            token = processChar(token, cursor);
+            if(token != null) {
+                return new Token(TokenType.CHAR, token.toString());
+            } else {
+                //TODO Char malformation
+            }
+        } else {
+//            [$&+,:;=?@#|]
+            Pattern regex = Pattern.compile("['\"'$%¨&:?@#|]");
+            Matcher matcher = regex.matcher(Character.toString(character));
+            if (matcher.find()) {
+                System.out.println("Erro: " + character);
+                //TODO character malformation
+            }
 
-        else {
             if(!cursor.hasNext()) {
                 cursor.setLastCharacterProcessed(true);
             } else {
@@ -193,29 +210,64 @@ public class Scanner {
                 }
             }
         } while (!endOfBlock && cursor.hasNext());
+
+        if(!endOfBlock) {
+            cursor.getNext();
+            //TODO comments malformation
+        }
     }
 
     private StringBuffer processLetters(StringBuffer token, Cursor cursor) {
         char character;
+        Pattern regex = Pattern.compile("[A-Za-z0-9_]");
+        Matcher matcher;
+        boolean isValid = false;
 
         do {
+
             character = cursor.getNext();
-            if(Character.isLetterOrDigit(character) || character == '_'){
+            matcher = regex.matcher(Character.toString(character));
+
+            if (matcher.find()) {
                 token.append(character);
+                isValid = true;
+            } else {
+                isValid = false;
             }
-        } while(Character.isLetterOrDigit(character) || character == '_');
+
+        } while (isValid);
 
         return token;
     }
 
-    private void processChar(Cursor cursor) {
+    private StringBuffer processChar(StringBuffer token, Cursor cursor) {
         char character;
+        boolean isMalformation = false;
+        Pattern regex = Pattern.compile("[A-Za-z0-9]");
+        Matcher matcher;
 
-        do {
-            character = cursor.getNext();
-        } while(character != '\'');
+        character = cursor.getNext();
+        matcher = regex.matcher(Character.toString(character));
+        token.append(character);
 
-        cursor.getNext();
+        if(!matcher.find()){
+            isMalformation = true;
+            return null;
+        }
+
+        character = cursor.getNext();
+        token.append(character);
+
+        if(character != '\'') {
+            isMalformation = true;
+            return null;
+        }
+
+        if(isMalformation) {
+            //TODO char malformation
+        }
+
+        return token;
     }
 
     private TokenType isReservedWord(String token) {
