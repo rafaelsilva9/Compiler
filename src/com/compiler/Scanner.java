@@ -1,5 +1,6 @@
 package com.compiler;
 
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -8,150 +9,146 @@ import java.util.regex.Pattern;
  */
 public class Scanner {
 
-    public Token process(Cursor cursor) {
-        char character = cursor.getActualCharacter();
-        StringBuffer token = new StringBuffer(String.valueOf(character));
+    public Token process(Cursor cursor) throws IllegalArgumentException {
+        boolean noToken = false;
 
-        //TODO Scanner sempre deve processar o arquivo até retornar um token
-        if (Character.isDigit(character)) {
+        do {
+            char character = cursor.getActualCharacter();
+            StringBuffer token = new StringBuffer(String.valueOf(character));
 
-            token = processDigit(token, cursor);
-            character = cursor.getActualCharacter();
+            if (Character.isDigit(character)) {
 
-            if(character == '.') {
-                token.append(character);
+                token = processDigit(token, cursor);
+                character = cursor.getActualCharacter();
+
+                if(character == '.') {
+                    token.append(character);
+                    token = processPoint(token, cursor);
+                    if (token != null) {
+                        return new Token(TokenType.FLOAT, token.toString());
+                    }
+                } else {
+                    return new Token(TokenType.INT, token.toString());
+                }
+            } else if (character == '.') {
                 token = processPoint(token, cursor);
                 if (token != null) {
                     return new Token(TokenType.FLOAT, token.toString());
+                }
+            } else if (character == '+') {
+                cursor.getNext();
+                return new Token(TokenType.SUM, token.toString());
+            } else if (character == '-') {
+                cursor.getNext();
+                return new Token(TokenType.SUB, token.toString());
+            } else if (character == '*') {
+                cursor.getNext();
+                return new Token(TokenType.MULT, token.toString());
+            } else if (character == '<') {
+                character = cursor.getNext();
+                if (character == '=') {
+                    token.append(character);
+                    cursor.getNext();
+                    return new Token(TokenType.LESS_OR_EQUAL, token.toString());
                 } else {
-                    //TODO Float malformation
+                    return new Token(TokenType.LESS_THAN, token.toString());
+                }
+            } else if (character == '>') {
+                character = cursor.getNext();
+                if (character == '=') {
+                    token.append(character);
+                    cursor.getNext();
+                    return new Token(TokenType.GREATER_OR_EQUAL, token.toString());
+                } else {
+                    return new Token(TokenType.GREATER_THAN, token.toString());
+                }
+            } else if (character == '=') {
+                character = cursor.getNext();
+                if (character == '=') {
+                    token.append(character);
+                    cursor.getNext();
+                    return new Token(TokenType.EQUALITY, token.toString());
+                } else {
+                    return new Token(TokenType.ASSIGNMENT, token.toString());
+                }
+            } else if (character == '!') {
+                character = cursor.getNext();
+                if (character == '=') {
+                    token.append(character);
+                    cursor.getNext();
+                    return new Token(TokenType.DIFFERENT, token.toString());
+                } else {
+                    new ScannerException(ErrorType.WRONG_EXCLAMATION_USE, token.toString(),
+                            cursor.getLine(), cursor.getColumn() - token.length());
+                }
+            } else if(character == '(') {
+                cursor.getNext();
+                return new Token(TokenType.OPENS_PARENTHESIS, token.toString());
+            } else if(character == ')') {
+                cursor.getNext();
+                return new Token(TokenType.CLOSES_PARENTHESIS, token.toString());
+            } else if(character == '{') {
+                cursor.getNext();
+                return new Token(TokenType.OPENS_CURLY_BRACKET, token.toString());
+            } else if(character == '}') {
+                cursor.getNext();
+                return new Token(TokenType.CLOSE_CURLY_BRACKET, token.toString());
+            } else if(character == ',') {
+                cursor.getNext();
+                return new Token(TokenType.COMMA, token.toString());
+            } else if(character == ';') {
+                cursor.getNext();
+                return new Token(TokenType.SEMICOLON, token.toString());
+            } else if(character == '/') {
+                character = cursor.getNext();
+                if(character == '/') {
+                    token.append(character);
+                    processCommentLine(cursor);
+                    return null;
+                } else if(character == '*') {
+                    token.append(character);
+                    processCommentBlock(cursor);
+                    return null;
+
+                } else {
+                    return new Token(TokenType.DIV, token.toString());
+                }
+            } else if(Character.isLetter(character) || character == '_') {
+                Pattern regex = Pattern.compile("[A-Za-z_]");
+                Matcher matcher = regex.matcher(Character.toString(character));
+                if (matcher.find()) {
+                    token = processLetters(token, cursor);
+                    TokenType tokenType = isReservedWord(token.toString());
+                    if(tokenType == null) {
+                        return new Token(TokenType.IDETIFIER, token.toString());
+                    } else {
+                        return new Token(tokenType, token.toString());
+                    }
+                }
+            } else if(character == '\'') {
+                token = processChar(token, cursor);
+                if(token != null) {
+                    return new Token(TokenType.CHAR, token.toString());
                 }
             } else {
-                return new Token(TokenType.INT, token.toString());
-            }
-        } else if (character == '.') {
-            token = processPoint(token, cursor);
-            if (token != null) {
-                return new Token(TokenType.FLOAT, token.toString());
-            } else {
-                //TODO Float malformation
-            }
-        } else if (character == '+') {
-            cursor.getNext();
-            return new Token(TokenType.SUM, token.toString());
-        } else if (character == '-') {
-            cursor.getNext();
-            return new Token(TokenType.SUB, token.toString());
-        } else if (character == '*') {
-            cursor.getNext();
-            return new Token(TokenType.MULT, token.toString());
-        } else if (character == '<') {
-            character = cursor.getNext();
-            if (character == '=') {
-                token.append(character);
-                cursor.getNext();
-                return new Token(TokenType.LESS_OR_EQUAL, token.toString());
-            } else {
-                return new Token(TokenType.LESS_THAN, token.toString());
-            }
-        } else if (character == '>') {
-            character = cursor.getNext();
-            if (character == '=') {
-                token.append(character);
-                cursor.getNext();
-                return new Token(TokenType.GREATER_OR_EQUAL, token.toString());
-            } else {
-                return new Token(TokenType.GREATER_THAN, token.toString());
-            }
-        } else if (character == '=') {
-            character = cursor.getNext();
-            if (character == '=') {
-                token.append(character);
-                cursor.getNext();
-                return new Token(TokenType.EQUALITY, token.toString());
-            } else {
-                return new Token(TokenType.ASSIGNMENT, token.toString());
-            }
-            //TODO Não aceitar '!'
-        } else if (character == '!') {
-            character = cursor.getNext();
-            if (character == '=') {
-                token.append(character);
-                cursor.getNext();
-                return new Token(TokenType.DIFFERENT, token.toString());
-            } else {
-//                return new Token(TokenType.DENIAL, token.toString());
-                //TODO Denial malformation
-            }
-        } else if(character == '(') {
-            cursor.getNext();
-            return new Token(TokenType.OPENS_PARENTHESIS, token.toString());
-        } else if(character == ')') {
-            cursor.getNext();
-            return new Token(TokenType.CLOSES_PARENTHESIS, token.toString());
-        } else if(character == '{') {
-            cursor.getNext();
-            return new Token(TokenType.OPENS_CURLY_BRACKET, token.toString());
-        } else if(character == '}') {
-            cursor.getNext();
-            return new Token(TokenType.CLOSE_CURLY_BRACKET, token.toString());
-        } else if(character == '.') {
-            cursor.getNext();
-            return new Token(TokenType.DOT, token.toString());
-        } else if(character == ',') {
-            cursor.getNext();
-            return new Token(TokenType.COMMA, token.toString());
-        } else if(character == ';') {
-            cursor.getNext();
-            return new Token(TokenType.SEMICOLON, token.toString());
-        } else if(character == '/') {
-            character = cursor.getNext();
-            if(character == '/') {
-                token.append(character);
-                processCommentLine(cursor);
-                return null;
-            } else if(character == '*') {
-                token.append(character);
-                processCommentBlock(cursor);
-                return null;
+            /*[$&+,:;=?@#|]*/
+                Pattern regex = Pattern.compile("['\"'$%¨&:?@#|]");
+                Matcher matcher = regex.matcher(Character.toString(character));
+                if (matcher.find()) {
+                    new ScannerException(ErrorType.INVALID_CHARACTER, token.toString(),
+                            cursor.getLine(), cursor.getColumn() - token.length());
+                }
 
-            } else {
-                return new Token(TokenType.DIV, token.toString());
-            }
-        } else if(Character.isLetter(character) || character == '_') {
-            Pattern regex = Pattern.compile("[A-Za-z_]");
-            Matcher matcher = regex.matcher(Character.toString(character));
-            if (matcher.find()) {
-                token = processLetters(token, cursor);
-                TokenType tokenType = isReservedWord(token.toString());
-                if(tokenType == null) {
-                    return new Token(TokenType.IDETIFIER, token.toString());
+                if(!cursor.hasNext()) {
+                    cursor.setLastCharacterProcessed(true);
+                    noToken = false;
                 } else {
-                    return new Token(tokenType, token.toString());
+                    cursor.getNext();
+                    noToken = true;
                 }
             }
-        } else if(character == '\'') {
-            token = processChar(token, cursor);
-            if(token != null) {
-                return new Token(TokenType.CHAR, token.toString());
-            } else {
-                //TODO Char malformation
-            }
-        } else {
-//            [$&+,:;=?@#|]
-            Pattern regex = Pattern.compile("['\"'$%¨&:?@#|]");
-            Matcher matcher = regex.matcher(Character.toString(character));
-            if (matcher.find()) {
-                System.out.println("Erro: " + character);
-                //TODO character malformation
-            }
 
-            if(!cursor.hasNext()) {
-                cursor.setLastCharacterProcessed(true);
-            } else {
-                cursor.getNext();
-            }
-        }
+        } while(noToken);
 
         return null;
     }
@@ -180,8 +177,8 @@ public class Scanner {
             token.append(character);
             token = processDigit(token, cursor);
         } else {
-            //TODO Float malformation
-            return null;
+            new ScannerException(ErrorType.FLOAT_MALFORMATION, token.toString(),
+                    cursor.getLine(), cursor.getColumn() - token.length());
         }
 
         return token;
@@ -199,6 +196,7 @@ public class Scanner {
     private void processCommentBlock(Cursor cursor) {
         char character;
         boolean endOfBlock = false;
+        int initialColumn = cursor.getColumn() - 1;
 
         do {
             character = cursor.getNext();
@@ -213,7 +211,8 @@ public class Scanner {
 
         if(!endOfBlock) {
             cursor.getNext();
-            //TODO comments malformation
+            new ScannerException(ErrorType.WRONG_END_COMMENT, "/*",
+                    cursor.getLine(), initialColumn);
         }
     }
 
@@ -252,7 +251,6 @@ public class Scanner {
 
         if(!matcher.find()){
             isMalformation = true;
-            return null;
         }
 
         character = cursor.getNext();
@@ -260,11 +258,11 @@ public class Scanner {
 
         if(character != '\'') {
             isMalformation = true;
-            return null;
         }
 
         if(isMalformation) {
-            //TODO char malformation
+            new ScannerException(ErrorType.CHAR_MALFORMATION, token.toString(),
+                    cursor.getLine(), cursor.getColumn() - token.length());
         }
 
         return token;

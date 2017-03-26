@@ -14,6 +14,7 @@ public class Main {
             Cursor cursor = new Cursor(bufferedReader);
 
             while(!cursor.isLastCharacterProcessed()) {
+
                 Token token = scanner.process(cursor);
                 if(token != null){
                     System.out.println(token.getClassification() + " " + token.getLexeme());

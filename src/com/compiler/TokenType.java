@@ -23,7 +23,6 @@ public enum TokenType {
     OPENS_CURLY_BRACKET,
     CLOSE_CURLY_BRACKET,
     COMMA,
-    DOT,
     SEMICOLON,
     CHAR,
     IDETIFIER,
