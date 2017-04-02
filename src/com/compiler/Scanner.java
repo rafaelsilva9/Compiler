@@ -197,22 +197,25 @@ public class Scanner {
         char character;
         boolean endOfBlock = false;
         int initialColumn = cursor.getColumn() - 1;
+        int initialLine = cursor.getLine();
+        boolean lastIsAsterisk = false;
 
         do {
             character = cursor.getNext();
             if(character == '*') {
-                character = cursor.getNext();
-                if(character == '/') {
-                    cursor.getNext();
-                    endOfBlock = true;
-                }
+                lastIsAsterisk = true;
+            } else if(character == '/' && lastIsAsterisk) {
+                cursor.getNext();
+                endOfBlock = true;
+            } else {
+                lastIsAsterisk = false;
             }
         } while (!endOfBlock && cursor.hasNext());
 
         if(!endOfBlock) {
             cursor.getNext();
             new ScannerException(ErrorType.WRONG_END_COMMENT, "/*",
-                    cursor.getLine(), initialColumn);
+                    initialLine, initialColumn);
         }
     }
 
@@ -263,7 +266,10 @@ public class Scanner {
         if(isMalformation) {
             new ScannerException(ErrorType.CHAR_MALFORMATION, token.toString(),
                     cursor.getLine(), cursor.getColumn() - token.length());
+        } else{
+            cursor.getNext();
         }
+
 
         return token;
     }
