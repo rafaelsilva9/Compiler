@@ -13,7 +13,7 @@ public class Main {
 
             Cursor cursor = new Cursor(bufferedReader);
 
-            while(!cursor.isLastCharacterProcessed()) {
+            while(!cursor.isEof()) {
 
                 Token token = scanner.process(cursor);
                 if(token != null){

@@ -11,7 +11,7 @@ public class Cursor {
     private Character character;
     private int column;
     private int line;
-    private boolean lastCharacterProcessed;
+    private boolean eof;
 
     public Cursor(BufferedReader bufferedReader) {
         this.bufferedReader = bufferedReader;
@@ -66,11 +66,11 @@ public class Cursor {
         this.line = line;
     }
 
-    public void setLastCharacterProcessed(boolean lastCharacterProcessed) {
-        this.lastCharacterProcessed = lastCharacterProcessed;
+    public void setEof(boolean eof) {
+        this.eof = eof;
     }
 
-    public boolean isLastCharacterProcessed() {
-        return lastCharacterProcessed;
+    public boolean isEof() {
+        return eof;
     }
 }

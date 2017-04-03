@@ -1,6 +1,5 @@
 package com.compiler;
 
-import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -104,11 +103,17 @@ public class Scanner {
                 if(character == '/') {
                     token.append(character);
                     processCommentLine(cursor);
-                    return null;
+                    if(!cursor.hasNext()) {
+                        cursor.setEof(true);
+                        noToken = false;
+                    } else {
+                        cursor.getNext();
+                        noToken = true;
+                    }
                 } else if(character == '*') {
                     token.append(character);
                     processCommentBlock(cursor);
-                    return null;
+                    noToken = true;
 
                 } else {
                     return new Token(TokenType.DIV, token.toString());
@@ -140,7 +145,7 @@ public class Scanner {
                 }
 
                 if(!cursor.hasNext()) {
-                    cursor.setLastCharacterProcessed(true);
+                    cursor.setEof(true);
                     noToken = false;
                 } else {
                     cursor.getNext();
@@ -190,7 +195,7 @@ public class Scanner {
         do {
             character = cursor.getNext();
 
-        } while(character != '\n');
+        } while(character != '\n' && cursor.hasNext());
     }
 
     private void processCommentBlock(Cursor cursor) {
