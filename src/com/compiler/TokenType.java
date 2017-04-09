@@ -25,7 +25,7 @@ public enum TokenType {
     COMMA,
     SEMICOLON,
     CHAR,
-    IDETIFIER,
+    IDENTIFIER,
 
 
     RESERVED_MAIN,
