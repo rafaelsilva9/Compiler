@@ -32,42 +32,45 @@ public class Parser {
 
     public void procces(Cursor cursor) {
         Scanner scanner = new Scanner();
-
-        while(!cursor.isEof()) {
-            Token token = scanner.process(cursor);
-            this.token = token;
-            if(token != null){
-                program(scanner, cursor);
-            }
+        Token token = scanner.process(cursor);
+        this.token = token;
+        if(token != null){
+            program(scanner, cursor);
         }
     }
 
     private void program(Scanner scanner, Cursor cursor) {
         if(token.getClassification() != TokenType.RESERVED_INT) {
-            // Erro
+            new ParserException("Programa não contém o token \"int\"", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
         if(token.getClassification() != TokenType.RESERVED_MAIN) {
-            // Erro
+            new ParserException("Programa não contém o token \"main\"", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
         if(token.getClassification() != TokenType.OPENS_PARENTHESIS) {
-            // Erro
+            new ParserException("Programa não contém o token \"(\"", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
         if(token.getClassification() != TokenType.CLOSES_PARENTHESIS) {
-            // Erro
+            new ParserException("Programa não contém o token \")\"", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
         block(scanner, cursor);
         if(!cursor.isEof()) {
-            // Progama nao terminou apos o MAIN
+            new ParserException("Programa não terminou após o main", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
     }
 
     private void block(Scanner scanner, Cursor cursor) {
         if(token.getClassification() != TokenType.OPENS_CURLY_BRACKET) {
-            // Erro
+            new ParserException("Bloco não contém o \"{\"", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
         while(first(token, varTypes)) {
@@ -77,7 +80,8 @@ public class Parser {
             command(scanner, cursor);
         }
         if(token.getClassification() != TokenType.CLOSE_CURLY_BRACKET) {
-            // Erro
+            new ParserException("Bloco não contém o \"}\"", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
     }
@@ -85,16 +89,19 @@ public class Parser {
     private void varDecl(Scanner scanner, Cursor cursor) {
         token = scanner.process(cursor);
         if(token.getClassification() != TokenType.IDENTIFIER) {
-            // Erro
+            new ParserException("Declaração não possui um identificador válido", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
         while(token.getClassification() != TokenType.SEMICOLON) {
             if(token.getClassification() != TokenType.COMMA) {
-                // Erro
+                new ParserException("Declaração não possui uma vírgula para separar identificadores", token.getLexeme(),
+                        cursor.getLine(), cursor.getColumn() - token.getLexeme().length());
             }
             token = scanner.process(cursor);
             if(token.getClassification() != TokenType.IDENTIFIER) {
-                // Erro
+                new ParserException("Declaração não possui um identificador válido", token.getLexeme(), cursor.getLine(),
+                        cursor.getColumn() - token.getLexeme().length());
             }
             token = scanner.process(cursor);
         }
@@ -109,21 +116,24 @@ public class Parser {
         } else if(token.getClassification() == TokenType.RESERVED_IF) {
             token = scanner.process(cursor);
             if(token.getClassification() != TokenType.OPENS_PARENTHESIS) {
-                // Erro
+                new ParserException("if não contém o token \"(\"", token.getLexeme(), cursor.getLine(),
+                        cursor.getColumn() - token.getLexeme().length());
             }
             token = scanner.process(cursor);
             relationalExpression(scanner, cursor);
             if(token.getClassification() != TokenType.CLOSES_PARENTHESIS) {
-                // Erro
+                new ParserException("if não contém o token \")\"", token.getLexeme(), cursor.getLine(),
+                        cursor.getColumn() - token.getLexeme().length());
             }
             token = scanner.process(cursor);
             command(scanner, cursor);
-            if(token.getClassification() != TokenType.RESERVED_ELSE) {
+            if(token.getClassification() == TokenType.RESERVED_ELSE) {
                 token = scanner.process(cursor);
                 command(scanner, cursor);
             }
         } else {
-            // Erro
+            new ParserException("Comando inválido", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
     }
 
@@ -134,19 +144,19 @@ public class Parser {
 
         } else if(token.getClassification() == TokenType.OPENS_CURLY_BRACKET) {
             block(scanner, cursor);
-        } else {
-            // ?
         }
     }
 
     private void assignment(Scanner scanner, Cursor cursor) {
         if(token.getClassification() != TokenType.ASSIGNMENT) {
-            // Erro
+            new ParserException("Atribuição não contém o token \"=\"", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
         arithmeticExpression(scanner, cursor);
         if(token.getClassification() != TokenType.SEMICOLON) {
-            // Erro
+            new ParserException("Token \";\" não foi encontrado no final da atribuição", token.getLexeme(),
+                    cursor.getLine(), cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
     }
@@ -187,11 +197,13 @@ public class Parser {
             token = scanner.process(cursor);
             arithmeticExpression(scanner, cursor);
             if(token.getClassification() != TokenType.CLOSES_PARENTHESIS) {
-                // Erro
+                new ParserException("Token \")\" é necessário e não foi encontrado na expressão",
+                        token.getLexeme(), cursor.getLine(), cursor.getColumn() - token.getLexeme().length());
             }
             token = scanner.process(cursor);
         } else {
-            // Erro
+            new ParserException("Expressão não possui um fator conhecido", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
     }
 
@@ -200,31 +212,37 @@ public class Parser {
             token = scanner.process(cursor);
             command(scanner, cursor);
             if(token.getClassification() != TokenType.RESERVED_WHILE) {
-                // Erro
+                new ParserException("O token \"while\" não foi encontrado", token.getLexeme(), cursor.getLine(),
+                        cursor.getColumn() - token.getLexeme().length());
             }
             token = scanner.process(cursor);
             if(token.getClassification() != TokenType.OPENS_PARENTHESIS) {
-                // Erro
+                new ParserException("O token \"(\" não foi encontrado", token.getLexeme(), cursor.getLine(),
+                        cursor.getColumn() - token.getLexeme().length());
             }
             token = scanner.process(cursor);
             relationalExpression(scanner, cursor);
             if(token.getClassification() != TokenType.CLOSES_PARENTHESIS) {
-                // Erro
+                new ParserException("O token \")\" não foi encontrado", token.getLexeme(), cursor.getLine(),
+                        cursor.getColumn() - token.getLexeme().length());
             }
             token = scanner.process(cursor);
             if(token.getClassification() != TokenType.SEMICOLON) {
-                // Erro
+                new ParserException("O token \";\" não foi encontrado", token.getLexeme(), cursor.getLine(),
+                        cursor.getColumn() - token.getLexeme().length());
             }
             token = scanner.process(cursor);
         } else if(token.getClassification() == TokenType.RESERVED_WHILE) {
             token = scanner.process(cursor);
             if(token.getClassification() != TokenType.OPENS_PARENTHESIS) {
-
+                new ParserException("O token \"(\" não foi encontrado", token.getLexeme(), cursor.getLine(),
+                        cursor.getColumn() - token.getLexeme().length());
             }
             token = scanner.process(cursor);
             relationalExpression(scanner, cursor);
             if(token.getClassification() != TokenType.CLOSES_PARENTHESIS) {
-                // Erro
+                new ParserException("O token \")\" não foi encontrado", token.getLexeme(), cursor.getLine(),
+                        cursor.getColumn() - token.getLexeme().length());
             }
             token = scanner.process(cursor);
             command(scanner, cursor);
@@ -239,7 +257,8 @@ public class Parser {
                 && token.getClassification() != TokenType.GREATER_THAN
                 && token.getClassification() != TokenType.EQUALITY
                 && token.getClassification() != TokenType.DIFFERENT) {
-            // Erro
+            new ParserException("Operador relacional não foi encontrado na expressão", token.getLexeme(), cursor.getLine(),
+                    cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
         arithmeticExpression(scanner, cursor);
