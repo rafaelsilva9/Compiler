@@ -28,7 +28,7 @@ public class Parser {
             TokenType.RESERVED_WHILE
     };
 
-    public Token token;
+    private Token token;
 
     public void procces(Cursor cursor) {
         Scanner scanner = new Scanner();
@@ -42,7 +42,7 @@ public class Parser {
         }
     }
 
-    public void program(Scanner scanner, Cursor cursor) {
+    private void program(Scanner scanner, Cursor cursor) {
         if(token.getClassification() != TokenType.RESERVED_INT) {
             // Erro
         }
@@ -65,7 +65,7 @@ public class Parser {
         }
     }
 
-    public void block(Scanner scanner, Cursor cursor) {
+    private void block(Scanner scanner, Cursor cursor) {
         if(token.getClassification() != TokenType.OPENS_CURLY_BRACKET) {
             // Erro
         }
@@ -79,9 +79,10 @@ public class Parser {
         if(token.getClassification() != TokenType.CLOSE_CURLY_BRACKET) {
             // Erro
         }
+        token = scanner.process(cursor);
     }
 
-    public void varDecl(Scanner scanner, Cursor cursor) {
+    private void varDecl(Scanner scanner, Cursor cursor) {
         token = scanner.process(cursor);
         if(token.getClassification() != TokenType.IDENTIFIER) {
             // Erro
@@ -100,15 +101,33 @@ public class Parser {
         token = scanner.process(cursor);
     }
 
-    public void command(Scanner scanner, Cursor cursor) {
+    private void command(Scanner scanner, Cursor cursor) {
         if(first(token, firstOfbasicCmd)) {
             basicCommand(scanner, cursor);
         } else if(first(token, firstIteration)) {
             iteration(scanner, cursor);
+        } else if(token.getClassification() == TokenType.RESERVED_IF) {
+            token = scanner.process(cursor);
+            if(token.getClassification() != TokenType.OPENS_PARENTHESIS) {
+                // Erro
+            }
+            token = scanner.process(cursor);
+            relationalExpression(scanner, cursor);
+            if(token.getClassification() != TokenType.CLOSES_PARENTHESIS) {
+                // Erro
+            }
+            token = scanner.process(cursor);
+            command(scanner, cursor);
+            if(token.getClassification() != TokenType.RESERVED_ELSE) {
+                token = scanner.process(cursor);
+                command(scanner, cursor);
+            }
+        } else {
+            // Erro
         }
     }
 
-    public void basicCommand(Scanner scanner, Cursor cursor) {
+    private void basicCommand(Scanner scanner, Cursor cursor) {
         if(token.getClassification() == TokenType.IDENTIFIER) {
             token = scanner.process(cursor);
             assignment(scanner, cursor);
@@ -120,7 +139,7 @@ public class Parser {
         }
     }
 
-    public void assignment(Scanner scanner, Cursor cursor) {
+    private void assignment(Scanner scanner, Cursor cursor) {
         if(token.getClassification() != TokenType.ASSIGNMENT) {
             // Erro
         }
@@ -132,12 +151,12 @@ public class Parser {
         token = scanner.process(cursor);
     }
 
-    public void arithmeticExpression(Scanner scanner, Cursor cursor) {
+    private void arithmeticExpression(Scanner scanner, Cursor cursor) {
         term(scanner, cursor);
         arithmeticExpProductions(scanner, cursor);
     }
 
-    public void arithmeticExpProductions(Scanner scanner, Cursor cursor) {
+    private void arithmeticExpProductions(Scanner scanner, Cursor cursor) {
         if(token.getClassification() == TokenType.SUM || token.getClassification() == TokenType.SUB) {
             token = scanner.process(cursor);
             term(scanner, cursor);
@@ -145,12 +164,12 @@ public class Parser {
         }
     }
 
-    public void term(Scanner scanner, Cursor cursor) {
+    private void term(Scanner scanner, Cursor cursor) {
         factor(scanner, cursor);
         termProductions(scanner, cursor);
     }
 
-    public void termProductions(Scanner scanner, Cursor cursor) {
+    private void termProductions(Scanner scanner, Cursor cursor) {
         if(token.getClassification() == TokenType.MULT || token.getClassification() == TokenType.DIV) {
             token = scanner.process(cursor);
             factor(scanner, cursor);
@@ -158,7 +177,7 @@ public class Parser {
         }
     }
 
-    public void factor(Scanner scanner, Cursor cursor) {
+    private void factor(Scanner scanner, Cursor cursor) {
         if(token.getClassification() == TokenType.IDENTIFIER
                 || token.getClassification() == TokenType.FLOAT
                 || token.getClassification() == TokenType.INT
@@ -176,7 +195,7 @@ public class Parser {
         }
     }
 
-    public void iteration(Scanner scanner, Cursor cursor) {
+    private void iteration(Scanner scanner, Cursor cursor) {
         if(token.getClassification() == TokenType.RESERVED_DO) {
             token = scanner.process(cursor);
             command(scanner, cursor);
@@ -212,7 +231,7 @@ public class Parser {
         }
     }
 
-    public void relationalExpression(Scanner scanner, Cursor cursor) {
+    private void relationalExpression(Scanner scanner, Cursor cursor) {
         arithmeticExpression(scanner, cursor);
         if(token.getClassification() != TokenType.LESS_OR_EQUAL
                 && token.getClassification() != TokenType.LESS_THAN
@@ -222,10 +241,11 @@ public class Parser {
                 && token.getClassification() != TokenType.DIFFERENT) {
             // Erro
         }
+        token = scanner.process(cursor);
         arithmeticExpression(scanner, cursor);
     }
 
-    public boolean first(Token token, TokenType[] firstList) {
+    private boolean first(Token token, TokenType[] firstList) {
         for (int i = 0; i < firstList.length; i++) {
             if(token.getClassification() == firstList[i]) {
                 return true;
