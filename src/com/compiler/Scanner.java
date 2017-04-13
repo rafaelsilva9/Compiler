@@ -148,7 +148,7 @@ public class Scanner {
                     TokenType tokenType = isReservedWord(token.toString());
                     if(tokenType == null) {
                         lastToken = token.toString();
-                        return new Token(TokenType.IDETIFIER, token.toString());
+                        return new Token(TokenType.IDENTIFIER, token.toString());
                     } else {
                         lastToken = token.toString();
                         return new Token(tokenType, token.toString());
@@ -180,7 +180,7 @@ public class Scanner {
 
         } while(noToken);
 
-        return null;
+        return new Token(TokenType.END_OF_FILE, "End of file");
     }
 
     private StringBuffer processDigit(StringBuffer token, Cursor cursor) {

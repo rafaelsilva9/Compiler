@@ -25,7 +25,7 @@ public enum TokenType {
     COMMA,
     SEMICOLON,
     CHAR,
-    IDETIFIER,
+    IDENTIFIER,
 
 
     RESERVED_MAIN,
@@ -36,5 +36,7 @@ public enum TokenType {
     RESERVED_FOR,
     RESERVED_INT,
     RESERVED_FLOAT,
-    RESERVED_CHAR
+    RESERVED_CHAR,
+
+    END_OF_FILE
 }
