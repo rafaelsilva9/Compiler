@@ -33,13 +33,7 @@ public class Parser {
     public void procces(Cursor cursor) {
         Scanner scanner = new Scanner();
         token = scanner.process(cursor);
-//        if(token != null){
-            program(scanner, cursor);
-//        }
-        this.token = token;
-        if(token != null){
-            program(scanner, cursor);
-        }
+        program(scanner, cursor);
     }
 
     private void program(Scanner scanner, Cursor cursor) {

@@ -7,7 +7,7 @@ import java.io.IOException;
 public class Main {
 
     public static void main(String[] args) throws IOException {
-            FileReader file = new FileReader("C:/Users/rjs/Downloads/FileToRead.txt");
+            FileReader file = new FileReader(args[0]);
             BufferedReader bufferedReader = new BufferedReader(file);
             Cursor cursor = new Cursor(bufferedReader);
             Parser parser = new Parser();

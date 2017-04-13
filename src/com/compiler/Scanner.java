@@ -180,7 +180,7 @@ public class Scanner {
 
         } while(noToken);
 
-        return new Token(TokenType.END_OF_FILE, "End of file");
+        return new Token(TokenType.END_OF_FILE, "");
     }
 
     private StringBuffer processDigit(StringBuffer token, Cursor cursor) {
