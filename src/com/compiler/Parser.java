@@ -193,16 +193,23 @@ public class Parser {
         }
     }
 
-    private void term(Scanner scanner, Cursor cursor) {
-        factor(scanner, cursor);
+    private TokenType term(Scanner scanner, Cursor cursor) {
+        TokenType factorTypeA = factor(scanner, cursor);
+
         while(token.getClassification() == TokenType.MULT || token.getClassification() == TokenType.DIV) {
+            TokenType operationType = token.getClassification();
             token = scanner.process(cursor);
-            factor(scanner, cursor);
+            TokenType factorTypeB = factor(scanner, cursor);
+            factorTypeA = semanticAnalyzer.checkTerm(factorTypeA, factorTypeB, operationType);
         }
+
+        return factorTypeA;
     }
 
-    private void factor(Scanner scanner, Cursor cursor) {
-        if(token.getClassification() == TokenType.IDENTIFIER
+    private TokenType factor(Scanner scanner, Cursor cursor) {
+        TokenType factorType = token.getClassification();
+
+        if(factorType == TokenType.IDENTIFIER
                 || token.getClassification() == TokenType.FLOAT
                 || token.getClassification() == TokenType.INT
                 || token.getClassification() == TokenType.CHAR) {
@@ -219,6 +226,8 @@ public class Parser {
             new ParserException("Expressão não possui um fator conhecido", token.getLexeme(), cursor.getLine(),
                     cursor.getColumn() - token.getLexeme().length());
         }
+
+        return factorType;
     }
 
     private void iteration(Scanner scanner, Cursor cursor) {
