@@ -173,14 +173,9 @@ public class Parser {
 
     private void term(Scanner scanner, Cursor cursor) {
         factor(scanner, cursor);
-        termProductions(scanner, cursor);
-    }
-
-    private void termProductions(Scanner scanner, Cursor cursor) {
-        if(token.getClassification() == TokenType.MULT || token.getClassification() == TokenType.DIV) {
+        while(token.getClassification() == TokenType.MULT || token.getClassification() == TokenType.DIV) {
             token = scanner.process(cursor);
             factor(scanner, cursor);
-            termProductions(scanner, cursor);
         }
     }
 
