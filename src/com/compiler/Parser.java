@@ -29,10 +29,13 @@ public class Parser {
     };
 
     private Token token;
+    private SemanticAnalyzer semanticAnalyzer;
+    private int stackIndex = 1;
 
     public void procces(Cursor cursor) {
         Scanner scanner = new Scanner();
         token = scanner.process(cursor);
+        semanticAnalyzer = new SemanticAnalyzer();
         program(scanner, cursor);
     }
 
@@ -84,22 +87,41 @@ public class Parser {
     }
 
     private void varDecl(Scanner scanner, Cursor cursor) {
+        String symbolName;
+        TokenType symbolType = token.getClassification();
+
         token = scanner.process(cursor);
         if(token.getClassification() != TokenType.IDENTIFIER) {
             new ParserException("Declaração não possui um identificador válido", token.getLexeme(), cursor.getLine(),
                     cursor.getColumn() - token.getLexeme().length());
         }
+
+        // Get the name of symbol
+        symbolName = token.getLexeme();
+
+        // Checks if the variable already exists
+        semanticAnalyzer.checkVarDecl(symbolName, symbolType, stackIndex);
+
         token = scanner.process(cursor);
         while(token.getClassification() != TokenType.SEMICOLON) {
+
             if(token.getClassification() != TokenType.COMMA) {
                 new ParserException("Declaração não possui uma vírgula para separar identificadores", token.getLexeme(),
                         cursor.getLine(), cursor.getColumn() - token.getLexeme().length());
             }
+
             token = scanner.process(cursor);
             if(token.getClassification() != TokenType.IDENTIFIER) {
                 new ParserException("Declaração não possui um identificador válido", token.getLexeme(), cursor.getLine(),
                         cursor.getColumn() - token.getLexeme().length());
             }
+
+            // Get the name of the next symbol
+            symbolName = token.getLexeme();
+
+            // Checks if the variable already exists
+            semanticAnalyzer.checkVarDecl(symbolName, symbolType, stackIndex);
+
             token = scanner.process(cursor);
         }
         token = scanner.process(cursor);

@@ -8,6 +8,7 @@ import java.util.List;
  */
 public class SymbolTable {
     private List<Symbol> symbolList;
+
     public SymbolTable(){
         symbolList = new ArrayList<>();
     }
@@ -20,9 +21,9 @@ public class SymbolTable {
         return null;
     }
 
-    public void put(Token token, int stackIndex) {
-        if(getSymbol(token.getLexeme(), stackIndex) == null) {
-            Symbol newSymbol = new Symbol(token.getLexeme(), token.getClassification(), stackIndex);
+    public void put(TokenType type, String name, int stackIndex) {
+        if(getSymbol(name, stackIndex) == null) {
+            Symbol newSymbol = new Symbol(name, type, stackIndex);
             symbolList.add(newSymbol);
         }
     }

@@ -8,6 +8,7 @@ public class Symbol {
     private String name;
     private TokenType type;
     private int stackIndex;
+    private String value;
 
     public Symbol(String name, TokenType type, int stackIndex) {
 
@@ -26,5 +27,10 @@ public class Symbol {
 
     public int getStackIndex() {
         return stackIndex;
+    }
+
+    public void putValue(String value, TokenType typeOfvalue) {
+        if(typeOfvalue == type)
+            this.value = value;
     }
 }
