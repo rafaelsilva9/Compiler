@@ -69,4 +69,8 @@ public class SemanticAnalyzer {
         // It Returns float type because we are sure that the operation is of a float with an int
         return TokenType.FLOAT;
     }
+
+    public void removeFromStack(int stackIndex) {
+        table.removeFromStack(stackIndex);
+    }
 }

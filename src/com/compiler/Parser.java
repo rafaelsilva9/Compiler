@@ -87,7 +87,7 @@ public class Parser {
         }
         token = scanner.process(cursor);
 
-        stackIndex--;
+        semanticAnalyzer.removeFromStack(stackIndex--);
     }
 
     private void varDecl(Scanner scanner, Cursor cursor) {

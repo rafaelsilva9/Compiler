@@ -27,4 +27,13 @@ public class SymbolTable {
             symbolList.add(newSymbol);
         }
     }
+
+    public void removeFromStack(int stackIndex) {
+        List<Symbol> newList = new ArrayList<>();
+        for(Symbol symbol: symbolList) {
+            if(symbol.getStackIndex() != stackIndex)
+                newList.add(symbol);
+        }
+        symbolList = newList;
+    }
 }
