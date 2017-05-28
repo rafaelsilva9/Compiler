@@ -50,6 +50,23 @@ public class SemanticAnalyzer {
         }
     }
 
+    public TokenType checkArithmeticExpression(TokenType termTypeA, TokenType termTypeB) {
+        if(termTypeA == TokenType.INT && termTypeB == TokenType.INT ) {
+            return TokenType.INT;
+        }
+
+        if(termTypeA == TokenType.CHAR || termTypeB == TokenType.CHAR) {
+            // If factor A or factor B is not a Char
+            if(termTypeA != termTypeB) {
+                // TODO Gerar erro semântico pois existe uma operação de uma variável do tipo char com uma variável do tipo diferente
+                System.out.println("Erro semântico pois existe uma operação de uma variável do tipo char com uma variável do tipo diferente");
+            }
+        }
+
+        // It Returns float type because we are sure that the operation is of a float with an int
+        return TokenType.FLOAT;
+    }
+
     public TokenType checkTerm(TokenType factorTypeA, TokenType factorTypeB, TokenType operationType) {
         if(factorTypeA == TokenType.INT && factorTypeB == TokenType.INT ) {
             if(operationType == TokenType.MULT)
@@ -68,6 +85,16 @@ public class SemanticAnalyzer {
 
         // It Returns float type because we are sure that the operation is of a float with an int
         return TokenType.FLOAT;
+    }
+
+    public void checkRelationalExpression(TokenType termTypeA, TokenType termTypeB) {
+        if(termTypeA == TokenType.CHAR || termTypeB == TokenType.CHAR) {
+            // If factor A or factor B is not a Char
+            if(termTypeA != termTypeB) {
+                // TODO Gerar erro semântico pois existe uma operação de uma variável do tipo char com uma variável do tipo diferente
+                System.out.println("Erro semântico pois existe uma operação de uma variável do tipo char com uma variável do tipo diferente");
+            }
+        }
     }
 
     public void removeFromStack(int stackIndex) {

@@ -206,15 +206,14 @@ public class Parser {
 
     // The parameter 'termType' is the type of the last term read
     private TokenType arithmeticExpProductions(Scanner scanner, Cursor cursor, TokenType termType) {
-        TokenType operationType = token.getClassification();
         TokenType resultingType = termType;
 
-        if(operationType == TokenType.SUM || token.getClassification() == TokenType.SUB) {
+        if(token.getClassification() == TokenType.SUM || token.getClassification() == TokenType.SUB) {
             token = scanner.process(cursor);
             TokenType termB = term(scanner, cursor);
 
             // Check operation between terms and returns the resulting type
-            resultingType = semanticAnalyzer.checkTerm(termType, termB, operationType);
+            resultingType = semanticAnalyzer.checkArithmeticExpression(termType, termB);
 
             arithmeticExpProductions(scanner, cursor, resultingType);
         }
@@ -304,7 +303,7 @@ public class Parser {
     }
 
     private void relationalExpression(Scanner scanner, Cursor cursor) {
-        arithmeticExpression(scanner, cursor);
+        TokenType termTypeA = arithmeticExpression(scanner, cursor);
         if(token.getClassification() != TokenType.LESS_OR_EQUAL
                 && token.getClassification() != TokenType.LESS_THAN
                 && token.getClassification() != TokenType.GREATER_OR_EQUAL
@@ -315,7 +314,10 @@ public class Parser {
                     cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
-        arithmeticExpression(scanner, cursor);
+        TokenType termTypeB = arithmeticExpression(scanner, cursor);
+
+        semanticAnalyzer.checkRelationalExpression(termTypeA, termTypeB);
+
     }
 
     private boolean first(Token token, TokenType[] firstList) {
