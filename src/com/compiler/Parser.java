@@ -30,7 +30,7 @@ public class Parser {
 
     private Token token;
     private SemanticAnalyzer semanticAnalyzer;
-    private int stackIndex = 1;
+    private int stackIndex = 0;
 
     public void procces(Cursor cursor) {
         Scanner scanner = new Scanner();
@@ -68,6 +68,8 @@ public class Parser {
     }
 
     private void block(Scanner scanner, Cursor cursor) {
+        stackIndex++;
+
         if(token.getClassification() != TokenType.OPENS_CURLY_BRACKET) {
             new ParserException("Bloco não contém o \"{\"", token.getLexeme(), cursor.getLine(),
                     cursor.getColumn() - token.getLexeme().length());
@@ -84,6 +86,8 @@ public class Parser {
                     cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
+
+        stackIndex--;
     }
 
     private void varDecl(Scanner scanner, Cursor cursor) {
@@ -158,39 +162,64 @@ public class Parser {
 
     private void basicCommand(Scanner scanner, Cursor cursor) {
         if(token.getClassification() == TokenType.IDENTIFIER) {
+            // name of variable
+            String nameOfVariable = token.getLexeme();
+
             token = scanner.process(cursor);
-            assignment(scanner, cursor);
+
+            // type of value that will be assigned to variable
+            TokenType termType = assignment(scanner, cursor);
+
+
+            semanticAnalyzer.checkAssignment(nameOfVariable, termType, stackIndex);
 
         } else if(token.getClassification() == TokenType.OPENS_CURLY_BRACKET) {
             block(scanner, cursor);
         }
     }
 
-    private void assignment(Scanner scanner, Cursor cursor) {
+    // Returns the type of value that will be assigned to variable
+    private TokenType assignment(Scanner scanner, Cursor cursor) {
         if(token.getClassification() != TokenType.ASSIGNMENT) {
             new ParserException("Atribuição não contém o token \"=\"", token.getLexeme(), cursor.getLine(),
                     cursor.getColumn() - token.getLexeme().length());
         }
+
         token = scanner.process(cursor);
-        arithmeticExpression(scanner, cursor);
+        TokenType termType = arithmeticExpression(scanner, cursor);
+
         if(token.getClassification() != TokenType.SEMICOLON) {
             new ParserException("Token \";\" não foi encontrado no final da atribuição", token.getLexeme(),
                     cursor.getLine(), cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
+
+        return termType;
     }
 
-    private void arithmeticExpression(Scanner scanner, Cursor cursor) {
-        term(scanner, cursor);
-        arithmeticExpProductions(scanner, cursor);
+    // Returns the type of the expression result
+    private TokenType arithmeticExpression(Scanner scanner, Cursor cursor) {
+        TokenType termType = term(scanner, cursor);
+        termType = arithmeticExpProductions(scanner, cursor, termType);
+        return termType;
     }
 
-    private void arithmeticExpProductions(Scanner scanner, Cursor cursor) {
-        if(token.getClassification() == TokenType.SUM || token.getClassification() == TokenType.SUB) {
+    // The parameter 'termType' is the type of the last term read
+    private TokenType arithmeticExpProductions(Scanner scanner, Cursor cursor, TokenType termType) {
+        TokenType operationType = token.getClassification();
+        TokenType resultingType = termType;
+
+        if(operationType == TokenType.SUM || token.getClassification() == TokenType.SUB) {
             token = scanner.process(cursor);
-            term(scanner, cursor);
-            arithmeticExpProductions(scanner, cursor);
+            TokenType termB = term(scanner, cursor);
+
+            // Check operation between terms and returns the resulting type
+            resultingType = semanticAnalyzer.checkTerm(termType, termB, operationType);
+
+            arithmeticExpProductions(scanner, cursor, resultingType);
         }
+
+        return resultingType;
     }
 
     private TokenType term(Scanner scanner, Cursor cursor) {
@@ -200,6 +229,8 @@ public class Parser {
             TokenType operationType = token.getClassification();
             token = scanner.process(cursor);
             TokenType factorTypeB = factor(scanner, cursor);
+
+            // Check operation between terms and returns the resulting type
             factorTypeA = semanticAnalyzer.checkTerm(factorTypeA, factorTypeB, operationType);
         }
 

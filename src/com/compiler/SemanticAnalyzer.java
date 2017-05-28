@@ -10,8 +10,38 @@ public class SemanticAnalyzer {
         table = new SymbolTable();
     }
 
+    // Checks whether the variable exists
+    private boolean checkVariable(String symbolName, int stackIndex) {
+        return ( table.getSymbol(symbolName, stackIndex) != null );
+    }
+
+    // The parameter 'symbolType' is the value type to be assigned
+    public void checkAssignment(String symbolName, TokenType symbolType, int stackIndex) {
+        Symbol variable = table.getSymbol(symbolName, stackIndex);
+
+        if(variable == null) {
+            // TODO Existe uma atribuição a uma variável que não foi declarada
+            System.out.println("Existe uma atribuição a uma variável que não foi declarada");
+        }
+
+        if(variable.getType() == TokenType.RESERVED_CHAR && symbolType != TokenType.CHAR) {
+            // TODO Erro semântico pois existe uma atribuição de um valor diferente de um char a uma variável do tipo char
+            System.out.println("Erro semântico pois existe uma atribuição de um valor diferente de um char a uma variável do tipo char");
+        }
+
+        else if(variable.getType() == TokenType.RESERVED_INT && symbolType != TokenType.INT) {
+            // TODO Erro semântico pois existe uma atribuição de um valor diferente de um int a uma variável do tipo int
+            System.out.println("Erro semântico pois existe uma atribuição de um valor diferente de um int a uma variável do tipo int");
+        }
+
+        else if(variable.getType() == TokenType.RESERVED_FLOAT && symbolType == TokenType.CHAR) {
+            // TODO Erro semântico pois não se pode atribuir uma char a um float
+            System.out.println("Erro semântico pois não se pode atribuir uma char a um float");
+        }
+    }
+
     public void checkVarDecl(String symbolName, TokenType symbolType, int stackIndex) {
-        boolean alreadyExists = ( table.getSymbol(symbolName, stackIndex) != null );
+        boolean alreadyExists = checkVariable(symbolName, stackIndex);
         if(alreadyExists) {
             // TODO Gerar erro semântico pois a varíavel já existe
             System.out.println(" Erro semântico pois a varíavel já existe");
