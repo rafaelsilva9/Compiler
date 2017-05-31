@@ -239,14 +239,14 @@ public class Parser {
                 || token.getClassification() == TokenType.CHAR) {
 
             if(factorType == TokenType.IDENTIFIER) {
-                Symbol symbol = semanticAnalyzer.findSymbol(token.getLexeme(), stackIndex);
+                Symbol symbol = semanticAnalyzer.checkFactor(token.getLexeme(), stackIndex, cursor);
                 factorType = symbol.getType();
             }
 
             token = scanner.process(cursor);
         } else if(token.getClassification() == TokenType.OPENS_PARENTHESIS) {
             token = scanner.process(cursor);
-            arithmeticExpression(scanner, cursor);
+            factorType = arithmeticExpression(scanner, cursor);
             if(token.getClassification() != TokenType.CLOSES_PARENTHESIS) {
                 new ParserException("Token \")\" é necessário e não foi encontrado na expressão",
                         token.getLexeme(), cursor.getLine(), cursor.getColumn() - token.getLexeme().length());

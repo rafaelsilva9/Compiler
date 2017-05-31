@@ -10,18 +10,27 @@ public class SemanticAnalyzer {
         table = new SymbolTable();
     }
 
-    // Checks whether the variable exists
+    // Checks whether the variable exists on the actual scope
     private boolean checkVariable(String symbolName, int stackIndex) {
         return ( table.getSymbol(symbolName, stackIndex) != null );
     }
 
+    // Checks whether the variable exists in the current or previous scope
     public Symbol findSymbol(String symbolName, int stackIndex) {
-        return table.getSymbol(symbolName, stackIndex);
+        int a = stackIndex;
+        while(a > 0) {
+            Symbol symbol =  table.getSymbol(symbolName, a);
+            if(symbol != null) {
+                return symbol;
+            }
+            a --;
+        }
+        return null;
     }
 
     // The parameter 'symbolType' is the value type to be assigned
     public void checkAssignment(String symbolName, TokenType symbolType, int stackIndex, Cursor cursor) {
-        Symbol variable = table.getSymbol(symbolName, stackIndex);
+        Symbol variable = findSymbol(symbolName, stackIndex);
 
         if(variable == null) {
             new SemanticException("Existe uma atribuição a uma variável que não foi declarada.",
@@ -48,6 +57,7 @@ public class SemanticAnalyzer {
     public void checkVarDecl(String symbolName, TokenType symbolType, int stackIndex, Cursor cursor) {
         boolean alreadyExists = checkVariable(symbolName, stackIndex);
         TokenType varType;
+
         if(symbolType == TokenType.RESERVED_CHAR) {
             varType = TokenType.CHAR;
         } else if(symbolType == TokenType.RESERVED_INT) {
@@ -102,6 +112,17 @@ public class SemanticAnalyzer {
 
         // It Returns float type because we are sure that the operation is of a float with an int
         return TokenType.FLOAT;
+    }
+
+    public Symbol checkFactor(String symbolName, int stackIndex, Cursor cursor) {
+        Symbol variable = findSymbol(symbolName, stackIndex);
+
+        if(variable == null) {
+            new SemanticException("A variavel utilizada não foi declarada anteriormente.",
+                    symbolName, cursor.getLine(), cursor.getColumn());
+        }
+
+        return variable;
     }
 
     public void checkRelationalExpression(TokenType termTypeA, TokenType termTypeB, Cursor cursor) {
