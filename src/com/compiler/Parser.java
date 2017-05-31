@@ -104,7 +104,7 @@ public class Parser {
         symbolName = token.getLexeme();
 
         // Checks if the variable already exists
-        semanticAnalyzer.checkVarDecl(symbolName, symbolType, stackIndex);
+        semanticAnalyzer.checkVarDecl(symbolName, symbolType, stackIndex, cursor);
 
         token = scanner.process(cursor);
         while(token.getClassification() != TokenType.SEMICOLON) {
@@ -124,7 +124,7 @@ public class Parser {
             symbolName = token.getLexeme();
 
             // Checks if the variable already exists
-            semanticAnalyzer.checkVarDecl(symbolName, symbolType, stackIndex);
+            semanticAnalyzer.checkVarDecl(symbolName, symbolType, stackIndex, cursor);
 
             token = scanner.process(cursor);
         }
@@ -162,24 +162,18 @@ public class Parser {
 
     private void basicCommand(Scanner scanner, Cursor cursor) {
         if(token.getClassification() == TokenType.IDENTIFIER) {
-            // name of variable
-            String nameOfVariable = token.getLexeme();
-
-            token = scanner.process(cursor);
-
-            // type of value that will be assigned to variable
-            TokenType termType = assignment(scanner, cursor);
-
-
-            semanticAnalyzer.checkAssignment(nameOfVariable, termType, stackIndex);
+            assignment(scanner, cursor);
 
         } else if(token.getClassification() == TokenType.OPENS_CURLY_BRACKET) {
             block(scanner, cursor);
         }
     }
 
-    // Returns the type of value that will be assigned to variable
-    private TokenType assignment(Scanner scanner, Cursor cursor) {
+    private void assignment(Scanner scanner, Cursor cursor) {
+        // name of variable
+        String nameOfVariable = token.getLexeme();
+        token = scanner.process(cursor);
+
         if(token.getClassification() != TokenType.ASSIGNMENT) {
             new ParserException("Atribuição não contém o token \"=\"", token.getLexeme(), cursor.getLine(),
                     cursor.getColumn() - token.getLexeme().length());
@@ -188,13 +182,13 @@ public class Parser {
         token = scanner.process(cursor);
         TokenType termType = arithmeticExpression(scanner, cursor);
 
+        semanticAnalyzer.checkAssignment(nameOfVariable, termType, stackIndex, cursor);
+
         if(token.getClassification() != TokenType.SEMICOLON) {
             new ParserException("Token \";\" não foi encontrado no final da atribuição", token.getLexeme(),
                     cursor.getLine(), cursor.getColumn() - token.getLexeme().length());
         }
         token = scanner.process(cursor);
-
-        return termType;
     }
 
     // Returns the type of the expression result
@@ -213,7 +207,7 @@ public class Parser {
             TokenType termB = term(scanner, cursor);
 
             // Check operation between terms and returns the resulting type
-            resultingType = semanticAnalyzer.checkArithmeticExpression(termType, termB);
+            resultingType = semanticAnalyzer.checkArithmeticExpression(termType, termB, cursor);
 
             arithmeticExpProductions(scanner, cursor, resultingType);
         }
@@ -230,7 +224,7 @@ public class Parser {
             TokenType factorTypeB = factor(scanner, cursor);
 
             // Check operation between terms and returns the resulting type
-            factorTypeA = semanticAnalyzer.checkTerm(factorTypeA, factorTypeB, operationType);
+            factorTypeA = semanticAnalyzer.checkTerm(factorTypeA, factorTypeB, operationType, cursor);
         }
 
         return factorTypeA;
@@ -243,6 +237,12 @@ public class Parser {
                 || token.getClassification() == TokenType.FLOAT
                 || token.getClassification() == TokenType.INT
                 || token.getClassification() == TokenType.CHAR) {
+
+            if(factorType == TokenType.IDENTIFIER) {
+                Symbol symbol = semanticAnalyzer.findSymbol(token.getLexeme(), stackIndex);
+                factorType = symbol.getType();
+            }
+
             token = scanner.process(cursor);
         } else if(token.getClassification() == TokenType.OPENS_PARENTHESIS) {
             token = scanner.process(cursor);
@@ -316,7 +316,7 @@ public class Parser {
         token = scanner.process(cursor);
         TokenType termTypeB = arithmeticExpression(scanner, cursor);
 
-        semanticAnalyzer.checkRelationalExpression(termTypeA, termTypeB);
+        semanticAnalyzer.checkRelationalExpression(termTypeA, termTypeB, cursor);
 
     }
 

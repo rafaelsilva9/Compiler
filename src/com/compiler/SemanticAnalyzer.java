@@ -15,42 +15,56 @@ public class SemanticAnalyzer {
         return ( table.getSymbol(symbolName, stackIndex) != null );
     }
 
+    public Symbol findSymbol(String symbolName, int stackIndex) {
+        return table.getSymbol(symbolName, stackIndex);
+    }
+
     // The parameter 'symbolType' is the value type to be assigned
-    public void checkAssignment(String symbolName, TokenType symbolType, int stackIndex) {
+    public void checkAssignment(String symbolName, TokenType symbolType, int stackIndex, Cursor cursor) {
         Symbol variable = table.getSymbol(symbolName, stackIndex);
 
         if(variable == null) {
-            // TODO Existe uma atribuição a uma variável que não foi declarada
-            System.out.println("Existe uma atribuição a uma variável que não foi declarada");
+            new SemanticException("Existe uma atribuição a uma variável que não foi declarada.",
+                    symbolName, cursor.getLine(), cursor.getColumn());
         }
 
-        if(variable.getType() == TokenType.RESERVED_CHAR && symbolType != TokenType.CHAR) {
-            // TODO Erro semântico pois existe uma atribuição de um valor diferente de um char a uma variável do tipo char
-            System.out.println("Erro semântico pois existe uma atribuição de um valor diferente de um char a uma variável do tipo char");
+        if(variable.getType() == TokenType.CHAR && symbolType != TokenType.CHAR) {
+            new SemanticException("Existe uma atribuição de um valor diferente de um char a uma variável do tipo char. \n" +
+                    "Uma variável do tipo char só em compativel com char",
+                    symbolName, cursor.getLine(), cursor.getColumn());
         }
 
-        else if(variable.getType() == TokenType.RESERVED_INT && symbolType != TokenType.INT) {
-            // TODO Erro semântico pois existe uma atribuição de um valor diferente de um int a uma variável do tipo int
-            System.out.println("Erro semântico pois existe uma atribuição de um valor diferente de um int a uma variável do tipo int");
+        else if(variable.getType() == TokenType.INT && symbolType != TokenType.INT) {
+            new SemanticException("Existe uma atribuição de um valor diferente de um int a uma variável do tipo int.",
+                    symbolName, cursor.getLine(), cursor.getColumn());
         }
 
-        else if(variable.getType() == TokenType.RESERVED_FLOAT && symbolType == TokenType.CHAR) {
-            // TODO Erro semântico pois não se pode atribuir uma char a um float
-            System.out.println("Erro semântico pois não se pode atribuir uma char a um float");
+        else if(variable.getType() == TokenType.FLOAT && symbolType == TokenType.CHAR) {
+            new SemanticException("Uma variável do tipo float não é compatível com um char.",
+                    symbolName, cursor.getLine(), cursor.getColumn());
         }
     }
 
-    public void checkVarDecl(String symbolName, TokenType symbolType, int stackIndex) {
+    public void checkVarDecl(String symbolName, TokenType symbolType, int stackIndex, Cursor cursor) {
         boolean alreadyExists = checkVariable(symbolName, stackIndex);
-        if(alreadyExists) {
-            // TODO Gerar erro semântico pois a varíavel já existe
-            System.out.println(" Erro semântico pois a varíavel já existe");
+        TokenType varType;
+        if(symbolType == TokenType.RESERVED_CHAR) {
+            varType = TokenType.CHAR;
+        } else if(symbolType == TokenType.RESERVED_INT) {
+            varType = TokenType.INT;
         } else {
-            table.put(symbolType, symbolName, stackIndex);
+            varType = TokenType.FLOAT;
+        }
+
+        if(alreadyExists) {
+            new SemanticException("A variavel já foi declarada anteriormente.",
+                    symbolName, cursor.getLine(), cursor.getColumn());
+        } else {
+            table.put(varType, symbolName, stackIndex);
         }
     }
 
-    public TokenType checkArithmeticExpression(TokenType termTypeA, TokenType termTypeB) {
+    public TokenType checkArithmeticExpression(TokenType termTypeA, TokenType termTypeB, Cursor cursor) {
         if(termTypeA == TokenType.INT && termTypeB == TokenType.INT ) {
             return TokenType.INT;
         }
@@ -58,16 +72,18 @@ public class SemanticAnalyzer {
         if(termTypeA == TokenType.CHAR || termTypeB == TokenType.CHAR) {
             // If factor A or factor B is not a Char
             if(termTypeA != termTypeB) {
-                // TODO Gerar erro semântico pois existe uma operação de uma variável do tipo char com uma variável do tipo diferente
-                System.out.println("Erro semântico pois existe uma operação de uma variável do tipo char com uma variável do tipo diferente");
+                new SemanticException("Existe uma operação de uma variável do tipo char com uma variável do tipo diferente.",
+                        null, cursor.getLine(), cursor.getColumn());
             }
+
+            return TokenType.CHAR;
         }
 
         // It Returns float type because we are sure that the operation is of a float with an int
         return TokenType.FLOAT;
     }
 
-    public TokenType checkTerm(TokenType factorTypeA, TokenType factorTypeB, TokenType operationType) {
+    public TokenType checkTerm(TokenType factorTypeA, TokenType factorTypeB, TokenType operationType, Cursor cursor) {
         if(factorTypeA == TokenType.INT && factorTypeB == TokenType.INT ) {
             if(operationType == TokenType.MULT)
                 return TokenType.INT;
@@ -78,21 +94,22 @@ public class SemanticAnalyzer {
         if(factorTypeA == TokenType.CHAR || factorTypeB == TokenType.CHAR) {
             // If factor A or factor B is not a Char
             if(factorTypeA != factorTypeB) {
-                // TODO Gerar erro semântico pois existe uma operação de uma variável do tipo char com uma variável do tipo diferente
-                System.out.println("Erro semântico pois existe uma operação de uma variável do tipo char com uma variável do tipo diferente");
+                new SemanticException("Existe uma operação de uma variável do tipo char com uma variável do tipo diferente.",
+                        null, cursor.getLine(), cursor.getColumn());
             }
+            return TokenType.CHAR;
         }
 
         // It Returns float type because we are sure that the operation is of a float with an int
         return TokenType.FLOAT;
     }
 
-    public void checkRelationalExpression(TokenType termTypeA, TokenType termTypeB) {
+    public void checkRelationalExpression(TokenType termTypeA, TokenType termTypeB, Cursor cursor) {
         if(termTypeA == TokenType.CHAR || termTypeB == TokenType.CHAR) {
             // If factor A or factor B is not a Char
             if(termTypeA != termTypeB) {
-                // TODO Gerar erro semântico pois existe uma operação de uma variável do tipo char com uma variável do tipo diferente
-                System.out.println("Erro semântico pois existe uma operação de uma variável do tipo char com uma variável do tipo diferente");
+                new SemanticException("Existe uma operação de uma variável do tipo char com uma variável do tipo diferente.",
+                        null, cursor.getLine(), cursor.getColumn());
             }
         }
     }
