@@ -37,7 +37,7 @@ public class SymbolTable {
         }
 
         if(getSymbol(name, stackIndex) == null) {
-            Symbol newSymbol = new Symbol(name, type, stackIndex);
+            Symbol newSymbol = new Symbol(name, type);
             symbolList.add(newSymbol);
         }
     }

@@ -7,24 +7,31 @@ public class Symbol {
 
     private String name;
     private TokenType type;
-    private int stackIndex;
+    private Token operation;
 
-    public Symbol(String name, TokenType type, int stackIndex) {
+    public Symbol(String name, TokenType type) {
 
         this.name = name;
         this.type = type;
-        this.stackIndex = stackIndex;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public TokenType getType() {
         return type;
     }
 
-    public int getStackIndex() {
-        return stackIndex;
+    public Token getOperation() {
+        return operation;
+    }
+
+    public void setOperation(Token operation) {
+        this.operation = operation;
     }
 }

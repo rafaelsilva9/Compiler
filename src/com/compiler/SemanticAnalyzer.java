@@ -5,6 +5,7 @@ package com.compiler;
  */
 public class SemanticAnalyzer {
     private SymbolTable table;
+    private int termNumber = 0;
 
     public SemanticAnalyzer() {
         table = new SymbolTable();
@@ -74,44 +75,59 @@ public class SemanticAnalyzer {
         }
     }
 
-    public TokenType checkArithmeticExpression(TokenType termTypeA, TokenType termTypeB, Cursor cursor) {
-        if(termTypeA == TokenType.INT && termTypeB == TokenType.INT ) {
-            return TokenType.INT;
+    public Symbol checkArithmeticExpression(Symbol symbolA, Symbol symbolB, Cursor cursor) {
+        Symbol result;
+
+        if(symbolA.getType() == TokenType.INT && symbolB.getType() == TokenType.INT ) {
+            return new Symbol(newTerm(), TokenType.INT);
         }
 
-        if(termTypeA == TokenType.CHAR || termTypeB == TokenType.CHAR) {
-            // If factor A or factor B is not a Char
-            if(termTypeA != termTypeB) {
+        if(symbolA.getType() == TokenType.CHAR || symbolB.getType() == TokenType.CHAR) {
+            // If symbol A or symbol B is not a Char
+            if(symbolA.getType() != symbolB.getType()) {
                 new SemanticException("Existe uma operação de uma variável do tipo char com uma variável do tipo diferente.",
                         null, cursor.getLine(), cursor.getColumn());
             }
 
-            return TokenType.CHAR;
+            return new Symbol(newTerm(), TokenType.CHAR);
         }
 
-        // It Returns float type because we are sure that the operation is of a float with an int
-        return TokenType.FLOAT;
+        if(symbolA.getType() == TokenType.INT) {
+            symbolA.setName("(Float)" + symbolA.getName());
+        } else if(symbolB.getType() == TokenType.INT) {
+            symbolB.setName("(Float)" + symbolB.getName());
+        }
+
+        // It Returns float symbol because we are sure that the operation is of a float with an int
+        return new Symbol(newTerm(), TokenType.FLOAT);
     }
 
-    public TokenType checkTerm(TokenType factorTypeA, TokenType factorTypeB, TokenType operationType, Cursor cursor) {
-        if(factorTypeA == TokenType.INT && factorTypeB == TokenType.INT ) {
+    public Symbol checkTerm(Symbol symbolA, Symbol symbolB, TokenType operationType, Cursor cursor) {
+
+        if(symbolA.getType() == TokenType.INT && symbolB.getType() == TokenType.INT ) {
             if(operationType == TokenType.MULT)
-                return TokenType.INT;
+                return new Symbol(newTerm(), TokenType.INT);
             else
-                return TokenType.FLOAT;
+                return new Symbol(newTerm(), TokenType.FLOAT);
         }
 
-        if(factorTypeA == TokenType.CHAR || factorTypeB == TokenType.CHAR) {
-            // If factor A or factor B is not a Char
-            if(factorTypeA != factorTypeB) {
+        if(symbolA.getType() == TokenType.CHAR || symbolB.getType() == TokenType.CHAR) {
+            // If symbol A or symbol B is not a Char
+            if(symbolA.getType() != symbolB.getType()) {
                 new SemanticException("Existe uma operação de uma variável do tipo char com uma variável do tipo diferente.",
                         null, cursor.getLine(), cursor.getColumn());
             }
-            return TokenType.CHAR;
+            return new Symbol(newTerm(), TokenType.CHAR);
         }
 
-        // It Returns float type because we are sure that the operation is of a float with an int
-        return TokenType.FLOAT;
+        if(symbolA.getType() == TokenType.INT) {
+            symbolA.setName("(Float)" + symbolA.getName());
+        } else if(symbolB.getType() == TokenType.INT){
+            symbolB.setName("(Float)" + symbolB.getName());
+        }
+
+        // It Returns float symbol because we are sure that the operation is of a float with an int
+        return new Symbol(newTerm(), TokenType.FLOAT);
     }
 
     public Symbol checkFactor(String symbolName, int stackIndex, Cursor cursor) {
@@ -125,7 +141,7 @@ public class SemanticAnalyzer {
         return variable;
     }
 
-    public void checkRelationalExpression(TokenType termTypeA, TokenType termTypeB, Cursor cursor) {
+    public Symbol checkRelationalExpression(TokenType termTypeA, TokenType termTypeB, Cursor cursor) {
         if(termTypeA == TokenType.CHAR || termTypeB == TokenType.CHAR) {
             // If factor A or factor B is not a Char
             if(termTypeA != termTypeB) {
@@ -133,9 +149,15 @@ public class SemanticAnalyzer {
                         null, cursor.getLine(), cursor.getColumn());
             }
         }
+
+        return new Symbol(newTerm(), null);
     }
 
     public void removeFromStack(int stackIndex) {
         table.removeFromStack(stackIndex);
+    }
+
+    private String newTerm() {
+        return "T" + termNumber++;
     }
 }
