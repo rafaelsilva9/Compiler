@@ -1,5 +1,7 @@
 package com.compiler;
 
+import com.sun.org.apache.bcel.internal.classfile.Code;
+
 /**
  * Created by Rafael on 27/05/2017.
  */
@@ -141,16 +143,44 @@ public class SemanticAnalyzer {
         return variable;
     }
 
-    public Symbol checkRelationalExpression(TokenType termTypeA, TokenType termTypeB, Cursor cursor) {
-        if(termTypeA == TokenType.CHAR || termTypeB == TokenType.CHAR) {
+    public Symbol checkRelationalExpression(Symbol exprA, Symbol exprB, Token operation, Cursor cursor) {
+        if(exprA.getType() == TokenType.CHAR || exprB.getType() == TokenType.CHAR) {
             // If factor A or factor B is not a Char
-            if(termTypeA != termTypeB) {
+            if(exprA.getType() != exprB.getType()) {
                 new SemanticException("Existe uma operação de uma variável do tipo char com uma variável do tipo diferente.",
                         null, cursor.getLine(), cursor.getColumn());
             }
+            Symbol resultExpr = new Symbol(newTerm(), null);
+            CodeGenerator.assignmentCode(resultExpr, exprA, exprB, operation);
+            return resultExpr;
         }
 
-        return new Symbol(newTerm(), null);
+        if(exprA.getType() == TokenType.INT &&exprB.getType() == TokenType.INT ) {
+            Symbol resultExpr = new Symbol(newTerm(), null);
+            CodeGenerator.assignmentCode(resultExpr, exprA, exprB, operation);
+            return resultExpr;
+        }
+
+        Symbol castResult = new Symbol(newTerm(), TokenType.FLOAT);
+        Symbol resultExpr = new Symbol(newTerm(), null);
+
+        if(exprA.getType() == TokenType.INT) {
+            // Do Cast
+            CodeGenerator.assignmentCode(castResult.getName(), "(Float)" + exprA.getName());
+            // Print expression result
+            CodeGenerator.assignmentCode(resultExpr, castResult, exprB, operation);
+            return resultExpr;
+        } else if(exprB.getType() == TokenType.INT){
+            // Do Cast
+            CodeGenerator.assignmentCode(castResult.getName(), "(Float)" + exprB.getName());
+            // Print expression result
+            CodeGenerator.assignmentCode(resultExpr, exprA, castResult, operation);
+            return resultExpr;
+        }
+
+        // Print expression result
+        CodeGenerator.assignmentCode(resultExpr, exprA, exprB, operation);
+        return resultExpr;
     }
 
     public void removeFromStack(int stackIndex) {

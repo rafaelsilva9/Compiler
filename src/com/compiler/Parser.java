@@ -168,9 +168,11 @@ public class Parser {
 
                 token = scanner.process(cursor);
                 command(scanner, cursor);
-            }
 
-            CodeGenerator.labelCode(labelEndIf);
+                CodeGenerator.labelCode(labelEndIf);
+            } else {
+                CodeGenerator.labelCode(labelElse);
+            }
 
         } else {
             new ParserException("Comando inválido", token.getLexeme(), cursor.getLine(),
@@ -357,11 +359,12 @@ public class Parser {
                         cursor.getColumn() - token.getLexeme().length());
             }
 
+            token = scanner.process(cursor);
+            command(scanner, cursor);
+
             CodeGenerator.gotoCode(labelWhile);
             CodeGenerator.labelCode(labelEndWhile);
 
-            token = scanner.process(cursor);
-            command(scanner, cursor);
         }
     }
 
@@ -382,8 +385,7 @@ public class Parser {
         token = scanner.process(cursor);
         Symbol exprB = arithmeticExpression(scanner, cursor);
 
-        Symbol exprResult = semanticAnalyzer.checkRelationalExpression(exprA.getType(), exprB.getType(), cursor);
-        CodeGenerator.assignmentCode(exprResult, exprA, exprB, operation);
+        Symbol exprResult = semanticAnalyzer.checkRelationalExpression(exprA, exprB, operation, cursor);
 
         return exprResult;
     }
